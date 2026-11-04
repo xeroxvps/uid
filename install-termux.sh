@@ -64,8 +64,25 @@ python - "$WORK/xrixuid/pnpm-workspace.yaml" <<'PY'
 from pathlib import Path
 import sys
 p = Path(sys.argv[1]); lines = p.read_text().splitlines()
-p.write_text('\n'.join(line for line in lines
-                     if not ('android-' in line and line.rstrip().endswith((': "-"', ": '-'")))) + '\n')
+# pnpm 11 replaced onlyBuiltDependencies with allowBuilds.
+# Permit only esbuild's necessary install script, not all dependency scripts.
+filtered = []
+in_legacy = False
+for line in lines:
+    if line.startswith('onlyBuiltDependencies:'):
+        in_legacy = True
+        continue
+    if in_legacy:
+        if line and not line[0].isspace() and not line.startswith('#'):
+            in_legacy = False
+        elif not line.strip() or line.lstrip().startswith('- ') or line.lstrip().startswith('#'):
+            continue
+    if 'android-' in line and line.rstrip().endswith((': "-"', ": '-'")):
+        continue
+    filtered.append(line)
+if not any(line.startswith('allowBuilds:') for line in filtered):
+    filtered += ['', 'allowBuilds:', '  esbuild: true']
+p.write_text('\n'.join(filtered).rstrip() + '\n')
 PY
 
 mkdir -p "$HOME/xrixuid"
