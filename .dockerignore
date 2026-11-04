@@ -6,3 +6,9 @@
 !scripts/
 !scripts/extract_zip.py
 !scripts/bootstrap-db.mjs
+!scripts/patch-fetch-build.py
+!scripts/guard-login-pages.py
+!services/
+!services/fetch-backend/
+!services/fetch-backend/fetch-server.ts
+!services/fetch-backend/proxy.ts
