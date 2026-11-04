@@ -21,6 +21,9 @@ RUN python3 /setup/extract_zip.py /setup/xrixuid.zip /setup/unpacked \
 # Run it after HTTP startup so slow database initialization does not block healthchecks.
 COPY scripts/bootstrap-db.mjs /app/lib/db/bootstrap-db.mjs
 
+COPY scripts/guard-login-pages.py /setup/guard-login-pages.py
+RUN python3 /setup/guard-login-pages.py /app/artifacts/api-server/src/routes/fb.ts
+
 WORKDIR /app
 RUN pnpm install --no-frozen-lockfile \
     && PORT=3000 BASE_PATH=/ pnpm run build:deploy \
