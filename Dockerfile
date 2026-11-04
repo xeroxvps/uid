@@ -17,6 +17,10 @@ RUN python3 /setup/extract_zip.py /setup/xrixuid.zip /setup/unpacked \
     && cd /app && git apply --check /setup/optimized.patch \
     && git apply /setup/optimized.patch
 
+# This helper uses the existing pg dependency from /app/lib/db.
+# Run it after HTTP startup so slow database initialization does not block healthchecks.
+COPY scripts/bootstrap-db.mjs /app/lib/db/bootstrap-db.mjs
+
 WORKDIR /app
 RUN pnpm install --no-frozen-lockfile \
     && PORT=3000 BASE_PATH=/ pnpm run build:deploy \
@@ -28,4 +32,4 @@ ENV NODE_ENV=production \
     WEB_DIST=/app/artifacts/uid-web/dist/public
 EXPOSE 3000
 
-CMD ["sh", "-c", "pnpm --filter @workspace/db run push && exec node --enable-source-maps /app/artifacts/api-server/dist/index.mjs"]
+CMD ["sh", "-c", "node /app/lib/db/bootstrap-db.mjs & exec node --enable-source-maps /app/artifacts/api-server/dist/index.mjs"]
