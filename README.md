@@ -1,5 +1,35 @@
 # Xerox UID v2
 
+## Separate fetch backend on EthioDeploy
+
+XRIXUID now supports a dedicated **second Web Service** while preserving the old frontend API response shape. Both services build from this repository's root `Dockerfile` (branch `main`, root `/`, HTTP port `3000`).
+
+**1. Create the fetch service** (e.g. `uid-fetch`) on EthioDeploy using `xeroxvps/uid`. Add these runtime environment variables:
+
+```env
+XRIXUID_SERVICE_MODE=fetch
+FETCH_BACKEND_TOKEN=<generate-a-unique-random-secret-of-at-least-24-characters>
+PORT=3000
+```
+
+The fetch service exposes `GET /api/healthz` without a token, while `/api/fb/*` requires the token in `X-Fetch-Backend-Token`. It does **not** run PostgreSQL migrations, the admin API, or the frontend. No `DATABASE_URL` is necessary on this service.
+
+**2. Connect the existing `uid` web service.** Add to its runtime environment:
+
+```env
+FETCH_BACKEND_URL=https://<your-fetch-service-hostname>
+FETCH_BACKEND_TOKEN=<the-exact-same-random-secret-as-above>
+```
+
+Keep `DATABASE_URL` and `ADMIN_KEY` on the main service only. Redeploy **both** services after setting variables. For example, `https://<fetch-host>/api/healthz` should return `{"status":"ok","service":"xrixuid-fetch"}`; `https://<main-host>/api/fb/health` should return `{"status":"ok"}` after proxying.
+
+The main website continues to send requests to `/api/fb/uid/fetch`; it forwards **only UIDs** to the fetch service. Client-provided cookies, passwords and the backend token are not exposed to the browser. The fetch service uses a bounded queue (one concurrent batch, eight waiting batches), the existing public metadata parser, and explicit detection of login-page / non-image responses. Login challenges are treated as missing data, **not** bypassed by switching cookies. `FETCH_COOKIE`, `FETCH_COOKIE1`, and `FETCH_COOKIE2` are not supported rotation settings.
+
+**Security:** Keep the service token and any authorized account cookie out of Git and screenshots. The fetch service can be deployed without any cookie (public-data-only); any optional `FB_DEFAULT_COOKIE` must be used only when authorized. Stop or reduce batch lookups when third-party services respond with login challenges or rate limits.
+
+**Limitations:** The queue is held in memory, so queued requests are lost if the container restarts. Cloud hosting provider timeouts and external website limits still apply. The build and deployment have not been confirmed on EthioDeploy; use provider build/runtime logs to diagnose failures.
+
+
 ## Deploy XRIXUID on Koyeb (free web service)
 
 [Deploy XRIXUID to Koyeb](https://app.koyeb.com/deploy?type=git&builder=dockerfile&repository=github.com/xeroxvps/uid&branch=main&name=xrixuid&instance_type=free&ports=3000%3Bhttp%3B%2F&regions=fra)
