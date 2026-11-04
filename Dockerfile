@@ -23,16 +23,21 @@ COPY scripts/bootstrap-db.mjs /app/lib/db/bootstrap-db.mjs
 
 COPY scripts/guard-login-pages.py /setup/guard-login-pages.py
 RUN python3 /setup/guard-login-pages.py /app/artifacts/api-server/src/routes/fb.ts
+COPY services/fetch-backend/fetch-server.ts /app/artifacts/api-server/src/fetch-server.ts
+COPY services/fetch-backend/proxy.ts /app/artifacts/api-server/src/fetch-proxy.ts
+COPY scripts/patch-fetch-build.py /setup/patch-fetch-build.py
+RUN python3 /setup/patch-fetch-build.py /app
 
 WORKDIR /app
 RUN pnpm install --no-frozen-lockfile \
     && PORT=3000 BASE_PATH=/ pnpm run build:deploy \
     && test -s /app/artifacts/uid-web/dist/public/index.html \
-    && test -s /app/artifacts/api-server/dist/index.mjs
+    && test -s /app/artifacts/api-server/dist/index.mjs \
+    && test -s /app/artifacts/api-server/dist/fetch-server.mjs
 
 ENV NODE_ENV=production \
     PORT=3000 \
     WEB_DIST=/app/artifacts/uid-web/dist/public
 EXPOSE 3000
 
-CMD ["sh", "-c", "node /app/lib/db/bootstrap-db.mjs & exec node --enable-source-maps /app/artifacts/api-server/dist/index.mjs"]
+CMD ["sh", "-c", "if [ \"${XRIXUID_SERVICE_MODE:-web}\" = \"fetch\" ]; then exec node --enable-source-maps /app/artifacts/api-server/dist/fetch-server.mjs; else node /app/lib/db/bootstrap-db.mjs & exec node --enable-source-maps /app/artifacts/api-server/dist/index.mjs; fi"]
