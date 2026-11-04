@@ -9,7 +9,7 @@ trap 'printf "\nXRIXUID setup failed (line %s). Check the error above.\n" "$LINE
 log 'Installer v3 — pnpm 11 allowBuilds policy (2026-11-04)'
 log 'Installing dependencies...'
 pkg update -y
-pkg install -y curl python git nodejs postgresql
+pkg install -y curl python git nodejs postgresql tmux
 command -v pnpm >/dev/null 2>&1 || npm install -g pnpm
 
 WORK="$(mktemp -d "${TMPDIR:-$PREFIX/tmp}/xrixuid.XXXXXXXX")"
@@ -116,6 +116,10 @@ source .env.termux
 log 'Creating database schema and building web/API...'
 pnpm --filter @workspace/db run push
 pnpm run build:deploy
-log 'READY! Open http://127.0.0.1:3000; stop with Ctrl+C.'
-log 'Start later: cd ~/xrixuid && source .env.termux && pnpm run start:deploy'
-exec pnpm run start:deploy
+log 'Installing background server manager...'
+curl -fL --retry 3 "$REPO/run-termux.sh" -o "$HOME/xrixuid/run-termux.sh"
+chmod 700 "$HOME/xrixuid/run-termux.sh"
+log 'Starting XRIXUID in persistent tmux session...'
+bash "$HOME/xrixuid/run-termux.sh" start
+log 'READY! Open http://127.0.0.1:3000'
+log 'Manage later: bash ~/xrixuid/run-termux.sh {start|stop|status|logs}'
