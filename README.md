@@ -1,5 +1,27 @@
 # Xerox UID v2
 
+## Termux (Android) — one-line full setup
+
+Run this **inside Termux** on Android:
+
+```bash
+pkg install -y curl && curl -fsSLo "$HOME/install-xrixuid.sh" https://raw.githubusercontent.com/xeroxvps/uid/main/install-termux.sh && bash "$HOME/install-xrixuid.sh"
+```
+
+Installer downloads the source ZIP and the optimized source patch from this repo, extracts selected source files (excluding archived `.git`, local secrets, runtime data and build artifacts), installs Node.js/pnpm/PostgreSQL, creates a private `.env.termux`, initializes the database, builds both apps, and starts the server.
+
+Open **http://127.0.0.1:3000** on the same phone after successful setup.
+
+To run again after restarting Termux:
+
+```bash
+cd ~/xrixuid && source .env.termux && pg_ctl -D "$PREFIX/var/lib/postgresql" status >/dev/null 2>&1 || pg_ctl -D "$PREFIX/var/lib/postgresql" -l "$HOME/xrixuid-postgres.log" start
+cd ~/xrixuid && source .env.termux && pnpm run start:deploy
+```
+
+The optimized changes are stored as a compressed source patch in `patches/xrixuid-optimized.patch.br.b64`; the unmodified original archive remains `xrixuid.zip`. This preserves the original source and makes the optimizations reproducible. The full Termux build must still be tested on a real Android device.
+
+
 UID management web application.
 
 ## Source files
