@@ -1,5 +1,20 @@
 # Xerox UID v2
 
+## Deploy XRIXUID on Koyeb (free web service)
+
+[Deploy XRIXUID to Koyeb](https://app.koyeb.com/deploy?type=git&builder=dockerfile&repository=github.com/xeroxvps/uid&branch=main&name=xrixuid&instance_type=free&ports=3000%3Bhttp%3B%2F&regions=fra)
+
+The app is a full-stack Node/Express and React project, not a static site. The root `Dockerfile` extracts the source archive and applies the optimized patch during the image build.
+
+1. Sign in to Koyeb with GitHub and authorize access to `xeroxvps/uid`. Click the deploy link above, or create a Web Service from GitHub and select **Dockerfile**, branch `main`, root work directory `.`.
+2. Set **Free** web instance, **Frankfurt (fra)** region, **HTTP port 3000** with route `/`, and health check `/api/healthz`.
+3. Create a separate PostgreSQL database before deploying. In Koyeb, select Databases → Create Database Service → Free. Koyeb's free DB is limited to **5 hours active compute per month**, so a separate Neon Free PostgreSQL database may be more appropriate for longer use.
+4. On the web service's Environment Variables settings, add `DATABASE_URL` from your database provider and a **strong, unique** `ADMIN_KEY`. Never put passwords or the connection string in GitHub files or screenshots. `NODE_ENV=production` and `PORT=3000` are supplied by the Docker image.
+5. Click Deploy. Open the generated `.koyeb.app` URL after the status becomes Healthy. Confirm `/api/healthz` responds with a JSON status. If it fails, check the Koyeb Build/Runtime logs.
+
+*Free instances have significant CPU/RAM and idle-sleep limits; high-volume lookup workloads may be slow or fail. Successful deployment is not guaranteed until the build and HTTP health checks pass.*
+
+
 ## Termux (Android) — one-line full setup
 
 Run this **inside Termux** on Android:
