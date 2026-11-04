@@ -28,4 +28,4 @@ ENV NODE_ENV=production \
     WEB_DIST=/app/artifacts/uid-web/dist/public
 EXPOSE 3000
 
-CMD ["node", "--enable-source-maps", "/app/artifacts/api-server/dist/index.mjs"]
+CMD ["sh", "-c", "pnpm --filter @workspace/db run push && exec node --enable-source-maps /app/artifacts/api-server/dist/index.mjs"]
