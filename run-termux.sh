@@ -42,15 +42,30 @@ case "${1:-start}" in
     [[ -f "$SCRIPT" ]] || die "Missing $SCRIPT"
     info 'Starting background tmux session...'
     tmux new-session -d -s "$SESSION" -c "$APP" "bash '$SCRIPT' foreground"
-    sleep 2
-    if is_running; then
-      info 'Server session running.'
+    # A tmux session existing does not mean the Node.js app is listening.
+    # Wait briefly for an HTTP response, detecting an early exit immediately.
+    ready=false
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+      if ! is_running; then
+        break
+      fi
+      http_code="$(curl -sS --max-time 1 -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/ 2>/dev/null || true)"
+      if [[ "$http_code" =~ ^[1-5][0-9][0-9]$ ]]; then
+        ready=true
+        break
+      fi
+      sleep 1
+    done
+    if [[ "$ready" == true ]]; then
+      info 'HTTP server responding.'
       info 'Website: http://127.0.0.1:3000'
       info "Logs: bash $SCRIPT logs"
-      info 'You may minimize Termux or detach; do not Force Stop the Android app.'
+      info 'Minimize Termux; do not Force Stop the Android app.'
     else
-      info 'Server quit during startup. Most recent output:'
-      tail -n 30 "$LOG" 2>/dev/null || true
+      info 'Server did not become ready. The tmux session may have exited.'
+      info 'Latest server logs (look for Error, EADDRINUSE, module errors, signal 9):'
+      tail -n 45 "$LOG" 2>/dev/null || true
+      info "Full logs: bash $SCRIPT logs"
       exit 1
     fi
     ;;
