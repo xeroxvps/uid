@@ -12,12 +12,24 @@ Installer downloads the source ZIP and the optimized source patch from this repo
 
 Open **http://127.0.0.1:3000** on the same phone after successful setup.
 
-To run again after restarting Termux:
+After a successful install, the launcher starts Node.js inside a detached `tmux` session. Leave Termux using the Android Home button; do not run `exit` inside the tmux server or Force Stop Termux. Android may still kill background processes under battery restrictions, and a phone reboot always requires a restart.
+
+For an **existing installation** that already built successfully, activate the background manager without reinstalling:
 
 ```bash
-cd ~/xrixuid && source .env.termux && pg_ctl -D "$PREFIX/var/lib/postgresql" status >/dev/null 2>&1 || pg_ctl -D "$PREFIX/var/lib/postgresql" -l "$HOME/xrixuid-postgres.log" start
-cd ~/xrixuid && source .env.termux && pnpm run start:deploy
+pkg install -y tmux curl && curl -fsSLo "$HOME/xrixuid/run-termux.sh" https://raw.githubusercontent.com/xeroxvps/uid/main/run-termux.sh && bash "$HOME/xrixuid/run-termux.sh" start
 ```
+
+Commands for later:
+
+```bash
+bash ~/xrixuid/run-termux.sh status
+bash ~/xrixuid/run-termux.sh logs
+bash ~/xrixuid/run-termux.sh stop
+bash ~/xrixuid/run-termux.sh start
+```
+
+With a new Android session or after restarting the phone, run `bash ~/xrixuid/run-termux.sh start`. If you use `attach`, detach safely with `Ctrl+B`, then `D`. Keep Termux battery usage unrestricted when available.
 
 The optimized changes are stored as a compressed source patch in `patches/xrixuid-optimized.patch.br.b64`; the unmodified original archive remains `xrixuid.zip`. This preserves the original source and makes the optimizations reproducible. The full Termux build must still be tested on a real Android device.
 
