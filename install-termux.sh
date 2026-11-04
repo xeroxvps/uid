@@ -6,6 +6,7 @@ log() { printf '\n\033[1;36m[XRIXUID]\033[0m %s\n' "$*"; }
 fail() { printf '\n\033[1;31m[XRIXUID ERROR]\033[0m %s\n' "$*" >&2; exit 1; }
 trap 'printf "\nXRIXUID setup failed (line %s). Check the error above.\n" "$LINENO" >&2' ERR
 [[ -n "${PREFIX:-}" && -x "$PREFIX/bin/pkg" ]] || fail 'Run directly inside Termux (not Ubuntu/proot).'
+log 'Installer v3 — pnpm 11 allowBuilds policy (2026-11-04)'
 log 'Installing dependencies...'
 pkg update -y
 pkg install -y curl python git nodejs postgresql
@@ -81,7 +82,7 @@ for line in lines:
         continue
     filtered.append(line)
 if not any(line.startswith('allowBuilds:') for line in filtered):
-    filtered += ['', 'allowBuilds:', '  esbuild: true']
+    filtered += ['', 'allowBuilds:', '  "@swc/core": true', '  esbuild: true', '  msw: true', '  unrs-resolver: true']
 p.write_text('\n'.join(filtered).rstrip() + '\n')
 PY
 
