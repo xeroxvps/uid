@@ -46,3 +46,13 @@ curl -I http://127.0.0.1:8088
 To change HTTP port, run `PORT=9090 bash install-vps.sh`.
 
 **Notes:** The archive app layout may require environment-specific configuration; the project has not been run on your VPS. Do not expose private UID data on plain HTTP without HTTPS, authentication and proper access controls.
+
+## Manual extraction from Termux if GitHub Actions does not start
+
+```bash
+pkg install git python -y
+curl -fL https://raw.githubusercontent.com/xeroxvps/uid/main/termux-unpack-push.sh -o termux-unpack-push.sh
+bash termux-unpack-push.sh
+```
+
+This syncs `xrixuid.zip` to `unpacked/` and commits the extracted files. GitHub push requires your own GitHub SSH key or personal access token configured in Termux. Review extracted files before making sensitive data public.
