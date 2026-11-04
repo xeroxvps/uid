@@ -5,3 +5,4 @@
 !patches/xrixuid-optimized.patch.br.b64
 !scripts/
 !scripts/extract_zip.py
+!scripts/bootstrap-db.mjs
